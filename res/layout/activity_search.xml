@@ -1,0 +1,138 @@
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tableLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/slims_bg" >
+
+	<TableRow
+	    android:id="@+id/tableRow3"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" >
+	</TableRow>
+ 
+	<TableRow
+	    android:id="@+id/tableRow1"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" >
+	    <TextView
+	       android:id="@+id/text1"
+	       android:layout_width="wrap_content"
+	       android:layout_height="wrap_content"
+	       android:gravity="center"
+	       android:text="Building Name : "
+	       android:layout_span="1"
+	       android:textAppearance="?android:attr/textAppearanceMedium" />
+
+	    <EditText
+	        android:id="@+id/fmw_direction_to_source_edittext_building"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:ems="5" >
+	
+	    </EditText> 
+	</TableRow>
+   
+	<TableRow
+	    android:id="@+id/tableRow2"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" >
+	   
+	   <TextView
+	      android:id="@+id/text2"
+	      android:layout_width="wrap_content"
+	      android:layout_height="wrap_content"
+	      android:gravity="center"
+	      android:text="Floor Lavel : "
+	      android:layout_span="1"
+	      android:textAppearance="?android:attr/textAppearanceMedium" />
+	
+	   <EditText
+	       android:id="@+id/fmw_direction_to_source_edittext_floor"
+	       android:layout_width="wrap_content"
+	       android:layout_height="wrap_content"
+	       android:ems="5" >
+	
+	   </EditText>
+	</TableRow>
+	
+	<TableRow
+	    android:id="@+id/tableRow4"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" >
+	   
+	   <TextView
+	      android:id="@+id/text3"
+	      android:layout_width="wrap_content"
+	      android:layout_height="wrap_content"
+	      android:gravity="center"
+	      android:text="Room Name : "
+	      android:layout_span="1"
+	      android:textAppearance="?android:attr/textAppearanceMedium" />
+	
+	   <EditText
+	       android:id="@+id/fmw_direction_to_source_edittext_room"
+	       android:layout_width="wrap_content"
+	       android:layout_height="wrap_content"
+	       android:ems="5" >
+	
+	   </EditText>
+	</TableRow>
+	
+	<TableRow
+	    android:id="@+id/tableRow5"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" >
+
+		<TextView
+		    android:id="@+id/textView3"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="TextView" 
+		    android:visibility="invisible"/>
+
+		<Button
+		    android:id="@+id/button_search"
+		    style="?android:attr/buttonStyleSmall"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="Search" />
+	    
+	</TableRow>
+
+	<View
+		android:layout_height="1dip"
+		android:background="#CCCCCC" />
+ 
+	<LinearLayout
+	      android:orientation="horizontal"
+	      android:layout_width="fill_parent"
+	      android:layout_height="wrap_content"
+	      android:layout_weight="0.1">   
+	   
+	   <ListView
+	       android:id="@+id/list1"
+	       android:layout_width="match_parent"
+	       android:layout_height="wrap_content">
+	   </ListView>
+		        
+	</LinearLayout>
+
+	<View
+		android:layout_height="1dip"
+		android:background="#CCCCCC" />
+   		  
+   	<LinearLayout
+      android:id="@+id/LinearLayout1"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:padding="5dip" >
+
+   		<TextView
+   		    android:id="@+id/text2"
+   		    android:layout_width="wrap_content"
+   		    android:layout_height="wrap_content"
+   		    android:text="By.. Sathittham.Com" />
+
+	</LinearLayout>
+	
+</TableLayout>

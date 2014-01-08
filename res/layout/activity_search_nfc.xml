@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="@drawable/slims_bg"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/fmw_setting_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="10dp"
+        android:text="Please tab your phone with NFC tag near you"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+    
+    <sathittham.sangthong.slims_master.GifMovieView
+        android:id="@+id/gifMovieView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" />
+
+    <TextView
+        android:id="@+id/sensor_acc_raw_y"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="20dp"
+        android:paddingTop="20dp"
+        android:text="or"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <Button
+        android:id="@+id/slims_scan_qr_code_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:minHeight="64dip"
+        android:text="@string/lable_scan_qr_code_btn" />
+
+</LinearLayout>

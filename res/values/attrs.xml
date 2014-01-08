@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GifMoviewView">
+        <attr name="gif" format="reference" />
+        <attr name="paused" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="CustomTheme">
+        <attr name="gifMoviewViewStyle" format="reference" />
+    </declare-styleable>
+    <declare-styleable name="CompassView">
+        	<attr name ="compass" format = "reference" />
+        	<attr name ="labelPosition" format = "enum">
+        	</attr>
+     </declare-styleable>
+</resources>

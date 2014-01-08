@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/LinearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/slims_bg"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/fmw_setting_imageview"
+        android:layout_width="270dp"
+        android:layout_height="130dp"
+        android:layout_gravity="center_horizontal"
+        android:paddingTop="10dp"
+        android:src="@drawable/ic_you_are_here" />
+
+    <TextView
+        android:id="@+id/read_nfc_info_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="25dp"
+        android:paddingLeft="10dp"
+        android:paddingTop="10dp"
+        android:text="Now! You are at :"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/read_nfc_result_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="fill_horizontal"
+        android:layout_marginTop="26dp"
+        android:text="" />
+
+    <Button
+        android:id="@+id/read_nfc_display_map_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Display on Map !" />
+
+</LinearLayout>

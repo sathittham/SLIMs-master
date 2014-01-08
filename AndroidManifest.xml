@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="sathittham.sangthong.slims_master"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="11"
+        android:targetSdkVersion="18" />
+
+    <!-- Set Permission -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+
+    <!-- Required to show current location -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Application Permission -->
+    <uses-permission android:name="sathittham.sangthong.slims_master.permission.MAPS_RECEIVE" />
+
+    <permission
+        android:name="sathittham.sangthong.slims_master.permission.MAPS_RECEIVE"
+        android:protectionLevel="signature" />
+
+    <!-- Required OpenGL ES 2.0 for Maps v2 -->
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher_slims"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="SplashScreenActivity"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- The main/home activity -->
+        <activity
+            android:name="sathittham.sangthong.slims_master.MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
+        </activity>
+
+        <!-- A child of the main activity -->
+        <activity
+            android:name="ReadNFCActivity"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="ext"
+                    android:pathPrefix="/sathittham.com/slims:geoService"
+                    android:scheme="vnd.android.nfc" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="WriteNFCActivity"
+            android:parentActivityName="com.example.myfirstapp.MainActivity" >
+
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="sathittham.sangthong.slims_master.MainActivity" />
+        </activity>
+        <activity android:name="SearchNFCActivity" >
+        </activity>
+        <activity android:name="QRCodeResultActivity" >
+        </activity>
+        <activity android:name="SearchActivity" >
+        </activity>
+
+        <!-- Library -->
+        <!-- Zxing -->
+        <activity
+            android:name="com.google.zxing.client.android.CaptureActivity"
+            android:screenOrientation="landscape" />
+
+        <!-- GOOGLE API KEY -->
+        <meta-data
+            android:name="com.google.android.maps.v2.API_KEY"
+            android:value="AIzaSyDAHsii3u2RzlwTCC13kFGvizlC1T7V75w" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+    </application>
+
+</manifest>

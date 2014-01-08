@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="dexedLibs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/bin/dexedLibs/core-2.2-4d86c1c3b885d7d70dd96375c2299bfa.jar!/" />
+      <root url="jar://$PROJECT_DIR$/bin/dexedLibs/google-play-services-0c7494ac5b64751f29d87a90f39fbc22.jar!/" />
+      <root url="jar://$PROJECT_DIR$/bin/dexedLibs/Androidplot-core-0.5.0-release-0951c2d433386b336b8c98cd61ffdba4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/bin/dexedLibs/androidplot-core-0.5.2-70a35729d93be9fd4fc1ce3b60b7f64d.jar!/" />
+      <root url="jar://$PROJECT_DIR$/bin/dexedLibs/android-support-v4-3054ab2fd931b0af5bae72ae9f066ad3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/bin/dexedLibs/google-play-services_lib-bc822b99104cdd49464d1360b880ff98.jar!/" />
+      <root url="jar://$PROJECT_DIR$/bin/dexedLibs/commons-math3-3.0-a92614a1d87747a1c26658dd1b076f44.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

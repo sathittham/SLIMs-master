@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/slims_menu_search"
+        android:icon="@drawable/ic_action_search"
+        android:showAsAction="ifRoom"
+        android:title="Search">
+        <menu>
+            <item
+                android:id="@+id/slims_menu_search_search_dialog"
+                android:icon="@drawable/ic_action_search"
+                android:title="Search Destination"/>
+            <item
+                android:id="@+id/slims_menu_search_search_qrcode"
+                android:icon="@drawable/ic_qrcode"
+                android:title="Search with QR Code"/>
+            <item
+                android:id="@+id/slims_menu_search_search_nfc"
+                android:icon="@drawable/ic_nfc"
+                android:title="Search with NFC"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/slims_menu_settings"
+        android:icon="@drawable/ic_action_overflow"
+        android:showAsAction="ifRoom"
+        android:title="Preferences">
+        <menu>
+            <item
+                android:id="@+id/slims_menu_settings_logger_plotdata"
+                android:icon="@drawable/ic_action_copy"
+                android:title="Log Data"/>
+            <item
+                android:id="@+id/slims_menu_settings_write_nfc"
+                android:icon="@drawable/ic_nfc_write_tag"
+                android:title="Write NFC Tag"/>
+            <item
+                android:id="@+id/slims_menu_graph"
+                android:icon="@drawable/action_about"
+                android:title="Graph"/>
+            <item
+                android:id="@+id/slims_menu_settings_setting"
+                android:icon="@drawable/action_settings"
+                android:title="Setting"/>
+            <item
+                android:id="@+id/slims_menu_settings_help"
+                android:icon="@drawable/action_help"
+                android:title="Help"/>
+        </menu>
+    </item>
+
+</menu>
