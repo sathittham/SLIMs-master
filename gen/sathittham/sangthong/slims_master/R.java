@@ -432,10 +432,10 @@ containing a value of this type.
         public static final int accel_y_value=0x7f060031;
         public static final int accel_z_value=0x7f060032;
         public static final int accelerometer=0x7f06005b;
-        public static final int action_settings=0x7f06008a;
+        public static final int action_settings=0x7f06008b;
         public static final int button_search=0x7f06004e;
-        public static final int check_box_plot=0x7f060085;
-        public static final int check_box_static_alpha=0x7f060089;
+        public static final int check_box_plot=0x7f060086;
+        public static final int check_box_static_alpha=0x7f06008a;
         public static final int command_box=0x7f060026;
         public static final int command_header=0x7f060027;
         public static final int command_value=0x7f060028;
@@ -467,17 +467,17 @@ containing a value of this type.
         public static final int hybrid=0x7f060004;
         public static final int image=0x7f060076;
         public static final int label_alpha=0x7f060080;
-        public static final int label_alpha_mode=0x7f060088;
+        public static final int label_alpha_mode=0x7f060089;
         public static final int label_app_description=0x7f06000e;
         public static final int label_filter_description=0x7f06007e;
         public static final int label_filter_name=0x7f06007d;
-        public static final int label_plot_mode=0x7f060084;
+        public static final int label_plot_mode=0x7f060085;
         public static final int label_sensor_name=0x7f06000d;
         public static final int launch_product_query=0x7f060008;
-        public static final int layout_plot_checkbox=0x7f060083;
-        public static final int layout_set_values=0x7f060087;
+        public static final int layout_plot_checkbox=0x7f060084;
+        public static final int layout_set_values=0x7f060088;
         public static final int layout_settings_content=0x7f06007f;
-        public static final int layout_toggle_values=0x7f060086;
+        public static final int layout_toggle_values=0x7f060087;
         public static final int linearAcceleration=0x7f06005c;
         public static final int linearLayout1=0x7f060050;
         public static final int list1=0x7f06004f;
@@ -508,16 +508,16 @@ containing a value of this type.
         public static final int sensorSelector=0x7f06005a;
         public static final int sensorSelectorLabel=0x7f060059;
         public static final int sensor_acc_raw_y=0x7f060057;
-        public static final int slims_menu_graph=0x7f060092;
-        public static final int slims_menu_search=0x7f06008b;
-        public static final int slims_menu_search_search_dialog=0x7f06008c;
-        public static final int slims_menu_search_search_nfc=0x7f06008e;
-        public static final int slims_menu_search_search_qrcode=0x7f06008d;
-        public static final int slims_menu_settings=0x7f06008f;
-        public static final int slims_menu_settings_help=0x7f060094;
-        public static final int slims_menu_settings_logger_plotdata=0x7f060090;
-        public static final int slims_menu_settings_setting=0x7f060093;
-        public static final int slims_menu_settings_write_nfc=0x7f060091;
+        public static final int slims_menu_graph=0x7f060093;
+        public static final int slims_menu_search=0x7f06008c;
+        public static final int slims_menu_search_search_dialog=0x7f06008d;
+        public static final int slims_menu_search_search_nfc=0x7f06008f;
+        public static final int slims_menu_search_search_qrcode=0x7f06008e;
+        public static final int slims_menu_settings=0x7f060090;
+        public static final int slims_menu_settings_help=0x7f060095;
+        public static final int slims_menu_settings_logger_plotdata=0x7f060091;
+        public static final int slims_menu_settings_setting=0x7f060094;
+        public static final int slims_menu_settings_write_nfc=0x7f060092;
         public static final int slims_scan_qr_code_btn=0x7f060058;
         public static final int start_btn=0x7f060034;
         public static final int status_view=0x7f060075;
@@ -552,6 +552,7 @@ containing a value of this type.
         public static final int text_introduction_3=0x7f060016;
         public static final int text_introduction_4=0x7f060018;
         public static final int value_alpha=0x7f060081;
+        public static final int value_window=0x7f060083;
         public static final int viewfinder_view=0x7f060074;
         public static final int write_nfc_builing_code_edittext=0x7f060066;
         public static final int write_nfc_distance_editText=0x7f060070;
@@ -589,9 +590,10 @@ containing a value of this type.
         public static final int popup_search_destination=0x7f03000b;
         public static final int settings=0x7f03000c;
         public static final int settings_filter_alpha=0x7f03000d;
-        public static final int settings_plot=0x7f03000e;
-        public static final int settings_toggle_dynamic_alpha=0x7f03000f;
-        public static final int settings_toggle_set_value=0x7f030010;
+        public static final int settings_filter_window=0x7f03000e;
+        public static final int settings_plot=0x7f03000f;
+        public static final int settings_toggle_dynamic_alpha=0x7f030010;
+        public static final int settings_toggle_set_value=0x7f030011;
     }
     public static final class menu {
         public static final int main=0x7f0c0000;
@@ -628,8 +630,8 @@ containing a value of this type.
          */
         public static final int auth_client_using_bad_version_title=0x7f070014;
         public static final int btn_write_nfc_write2tag=0x7f070022;
-        public static final int button_cancel=0x7f070039;
-        public static final int button_ok=0x7f07003a;
+        public static final int button_cancel=0x7f07003a;
+        public static final int button_ok=0x7f07003b;
         /**  Button in confirmation dialog to enable Google Play services.  Clicking it
         will direct user to application settings of Google Play services where they
         can enable it [CHAR LIMIT=40] 
@@ -701,7 +703,7 @@ containing a value of this type.
         /**  Long form sign-in button text [CHAR LIMIT=30] 
          */
         public static final int common_signin_button_text_long=0x7f070013;
-        public static final int contents_text=0x7f07003b;
+        public static final int contents_text=0x7f07003c;
         public static final int default_value=0x7f070030;
         public static final int developer_url=0x7f07002e;
         public static final int dynamic_alpha=0x7f070036;
@@ -720,10 +722,10 @@ containing a value of this type.
         public static final int lpf_and_dev_name=0x7f07002c;
         public static final int lpf_name=0x7f07002a;
         public static final int lpf_wiki_name=0x7f07002b;
-        public static final int msg_camera_framework_bug=0x7f07003d;
-        public static final int msg_default_status=0x7f07003e;
+        public static final int msg_camera_framework_bug=0x7f07003e;
+        public static final int msg_default_status=0x7f07003f;
         public static final int plot_filter=0x7f070038;
-        public static final int result_text=0x7f07003c;
+        public static final int result_text=0x7f07003d;
         public static final int rms_accel_label=0x7f070031;
         public static final int rms_and_dev_label=0x7f070033;
         public static final int rms_dynamic=0x7f070035;
@@ -731,6 +733,7 @@ containing a value of this type.
         public static final int rms_wiki_label=0x7f070032;
         public static final int sensor_name=0x7f07002d;
         public static final int static_alpha=0x7f070037;
+        public static final int window_size=0x7f070039;
         public static final int write_nfc_nodename=0x7f070023;
     }
     public static final class style {

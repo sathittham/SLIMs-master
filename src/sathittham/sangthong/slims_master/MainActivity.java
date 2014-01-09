@@ -14,8 +14,10 @@ import sathittham.sangthong.slims_master.pdr.DynamicPlot;
 import sathittham.sangthong.slims_master.pdr.LPFAndroidDeveloper;
 import sathittham.sangthong.slims_master.pdr.LPFWikipedia;
 import sathittham.sangthong.slims_master.pdr.LowPassFilter;
+import sathittham.sangthong.slims_master.pdr.MeanFilter;
 import sathittham.sangthong.slims_master.pdr.PlotColor;
 import sathittham.sangthong.slims_master.pdr.SettingsDialog;
+import sathittham.sangthong.slims_master.pdr.StdDev;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -116,6 +118,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	private float[] acceleration = new float[3];
 	private float[] lpfWikiOutput = new float[3];
 	private float[] lpfAndDevOutput = new float[3];
+	private float[] meanFilterOutput = new float[3];
 
 	// Sensor
 	Sensor accSensor;
@@ -166,6 +169,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	// Low-Pass Filters
 	private LowPassFilter lpfWiki;
 	private LowPassFilter lpfAndDev;
+	private MeanFilter meanFilter;
 
 	private boolean lpfAccelerationStaticAlpha = false;
 	private float accelerationLPFAlpha;
@@ -185,7 +189,13 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 
 	// The size of the sample window that determines RMS Amplitude Noise
 	// (standard deviation)
-	private final static int SAMPLE_WINDOW = 50;
+	private static int MEAN_SAMPLE_WINDOW = 20;
+
+	// RMS Noise levels
+	private StdDev varianceAccel;
+	private StdDev varianceLPFWiki;
+	private StdDev varianceLPFAndDev;
+	private StdDev varianceMean;
 
 	/***************** Log Data *****************/
 	// Indicate if the output should be logged to a .csv file
@@ -215,6 +225,11 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	private String plotLPFAndDevYAxisTitle = "ADY";
 	private String plotLPFAndDevZAxisTitle = "ADZ";
 
+	// Mean filter plot tiltes
+	private String plotMeanXAxisTitle = "MX";
+	private String plotMeanYAxisTitle = "MY";
+	private String plotMeanZAxisTitle = "MZ";
+
 	// Icon to indicate logging is active
 	private ImageView iconLogger;
 
@@ -236,9 +251,13 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	// Indicate if the Wiki LPF should be plotted
 	private boolean plotLPFWiki = false;
 
+	// Indicate if the Mean Filter should be plotted
+	private boolean plotMeanFilter = false;
+
 	// Indicate the plots are ready to accept inputs
 	private boolean plotLPFWikiReady = false;
 	private boolean plotLPFAndDevReady = false;
+	private boolean plotMeanReady = false;
 
 	// Touch to zoom constants for the dynamicPlot
 	private float distance = 0;
@@ -259,6 +278,11 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	private final static int PLOT_LPF_AND_DEV_Y_AXIS_KEY = 7;
 	private final static int PLOT_LPF_AND_DEV_Z_AXIS_KEY = 8;
 
+	// Plot keys for the mean filter plot
+	private final static int PLOT_MEAN_X_AXIS_KEY = 9;
+	private final static int PLOT_MEAN_Y_AXIS_KEY = 10;
+	private final static int PLOT_MEAN_Z_AXIS_KEY = 11;
+
 	// Color keys for the acceleration plot
 	private int plotAccelXAxisColor;
 	private int plotAccelYAxisColor;
@@ -274,13 +298,18 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	private int plotLPFAndDevYAxisColor;
 	private int plotLPFAndDevZAxisColor;
 
+	// Color keys for the mean filter plot
+	private int plotMeanXAxisColor;
+	private int plotMeanYAxisColor;
+	private int plotMeanZAxisColor;
+
 	/**
 	 * Get the sample window size for the standard deviation.
 	 * 
 	 * @return Sample window size for the standard deviation.
 	 */
 	public static int getSampleWindow() {
-		return SAMPLE_WINDOW;
+		return MEAN_SAMPLE_WINDOW;
 	}
 
 	/****************** on Create ******************/
@@ -306,9 +335,10 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		initButton();
 		initCompass();
 		initIcons();
+		initStatistics();
 		initFilters();
-		enableSensorListening() ;
-		
+		enableSensorListening();
+
 		// Initialize the plots
 		initColor();
 		initPlots();
@@ -338,8 +368,8 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 				heading = String.valueOf(geo[4]);
 				nodeName = String.valueOf(geo[5]);
 				nodeFrom = String.valueOf(geo[6]); // nodeCode
-				//sumDistance = String.valueOf(geo[7]);
-				
+				// sumDistance = String.valueOf(geo[7]);
+
 				// set Instruction command
 				mCommandValue.setText("You are here @ " + nodeName);
 
@@ -392,7 +422,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 
 			readPrefs();
 			initTextViewOutputs();
-			
+
 			handler.post(this);
 			Log.i(TAG, "[ACTIVITY] handle post");
 
@@ -438,7 +468,6 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			// Disable Orientation sensor listener
 			sensorManager.unregisterListener(orientationListener);
 
-
 			resetValue = 0.0f;
 			mAccMagnitude.setText(String.valueOf("Acceleration Magnitude : "
 					+ resetValue));
@@ -450,11 +479,11 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 
 			numSteps = 0;
 			mStepValue.setText(String.valueOf(numSteps));
-			
-//			Intent intent = getIntent();
-//			finish();
-//			startActivity(intent);
-//			
+
+			// Intent intent = getIntent();
+			// finish();
+			// startActivity(intent);
+			//
 			break;
 		}
 
@@ -478,27 +507,15 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			acceleration[1] = acceleration[1] / SensorManager.GRAVITY_EARTH; // y
 			acceleration[2] = acceleration[2] / SensorManager.GRAVITY_EARTH; // z
 
-			// Magnitude of Acceleration
-			accMagnitude = (float) Math.sqrt(Math.pow(acceleration[0], 2)
-					+ Math.pow(acceleration[1], 2)
-					+ Math.pow(acceleration[2], 2));
-
-			// Fetch the current y
-			currentY = acceleration[1];
-
-			// Measure if a step is taken
-			if (Math.abs(currentY - previousY) > thr) {
-				numSteps++;
-				mStepValue.setText(String.valueOf(numSteps));
-				float mdistance = (float) (numSteps * 0.3);
-				mDistanceValue.setText(String.valueOf(mdistance));
+			if (plotLPFWiki) {
+				lpfWikiOutput = lpfWiki.addSamples(acceleration);
 			}
-
-			// Store the previous Y
-			previousY = acceleration[1];
-
-			lpfWikiOutput = lpfWiki.addSamples(acceleration);
-			lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
+			if (plotLPFAndDev) {
+				lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
+			}
+			if (plotMeanFilter) {
+				meanFilterOutput = meanFilter.filterFloat(acceleration);
+			}
 
 		}
 
@@ -631,8 +648,6 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		nodeName = String.valueOf(geo[5]);
 		nodeFrom = String.valueOf(geo[6]); // nodeCode
 		sumDistance = String.valueOf(geo[7]);
-
-
 
 		// Tag Coordinates
 		tagCoordinates = new LatLng(lati, lngi);
@@ -771,10 +786,11 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		dynamicPlot = new DynamicPlot(plot);
 		dynamicPlot.setMaxRange(1.2);
 		dynamicPlot.setMinRange(-1.2);
-	
+
 		addAccelerationPlot();
 		addLPFWikiPlot();
 		addLPFAndDevPlot();
+		addMeanFilterPlot();
 	}
 
 	/**
@@ -837,54 +853,36 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		input = 0;
 	}
 
-	/**************** Remove Plot ****************/
 	/**
-	 * Remove a plot from the graph.
-	 * 
-	 * @param key
+	 * Initialize the filters.
 	 */
-	private void removePlot(int key) {
-		Log.i(TAG, "[ACTIVITY] removePlot()");
-		dynamicPlot.removeSeriesPlot(key);
-	}
-	/**
-	 * Remove the Acceleration plot.
-	 */
-	private void removeAccelerationPlot() {
-		Log.i(TAG, "[ACTIVITY] removeAccelerationPlot()");
+	private void initFilters() {
+		Log.i(TAG, "[ACTIVITY] initFilters()");
+		// Create the low-pass filters
+		lpfWiki = new LPFWikipedia();
+		lpfAndDev = new LPFAndroidDeveloper();
+		meanFilter = new MeanFilter();
 
-			removePlot(PLOT_ACCEL_X_AXIS_KEY);
-			removePlot(PLOT_ACCEL_Y_AXIS_KEY);
-			removePlot(PLOT_ACCEL_Z_AXIS_KEY);
+		meanFilter.setWindowSize(MEAN_SAMPLE_WINDOW);
 
-	}
+		// Initialize the low-pass filters with the saved prefs
+		lpfWiki.setAlphaStatic(staticWikiAlpha);
+		lpfWiki.setAlpha(WIKI_STATIC_ALPHA);
 
-	/**
-	 * Remove the Android Developer LPF plot.
-	 */
-	private void removeLPFAndDevPlot() {
-		Log.i(TAG, "[ACTIVITY] removeLPFAndDevPlot()");
-		if (!plotLPFAndDev) {
-			plotLPFAndDevReady = false;
+		lpfAndDev.setAlphaStatic(staticAndDevAlpha);
+		lpfAndDev.setAlpha(AND_DEV_STATIC_ALPHA);
 
-			removePlot(PLOT_LPF_AND_DEV_X_AXIS_KEY);
-			removePlot(PLOT_LPF_AND_DEV_Y_AXIS_KEY);
-			removePlot(PLOT_LPF_AND_DEV_Z_AXIS_KEY);
-		}
 	}
 
 	/**
-	 * Remove the Wikipedia LPF plot.
+	 * Initialize the statistics.
 	 */
-	private void removeLPFWikiPlot() {
-		Log.i(TAG, "[ACTIVITY] removeLPFWikiPlot()");
-		if (!plotLPFWiki) {
-			plotLPFWikiReady = false;
-
-			removePlot(PLOT_LPF_WIKI_X_AXIS_KEY);
-			removePlot(PLOT_LPF_WIKI_Y_AXIS_KEY);
-			removePlot(PLOT_LPF_WIKI_Z_AXIS_KEY);
-		}
+	private void initStatistics() {
+		// Create the RMS Noise calculations
+		varianceAccel = new StdDev();
+		varianceLPFWiki = new StdDev();
+		varianceLPFAndDev = new StdDev();
+		varianceMean = new StdDev();
 	}
 
 	/**************** Set Graph Plot ****************/
@@ -922,7 +920,23 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		}
 	}
 
-	/**************** Add Plot ****************/
+	/**
+	 * Indicate if the Mean Filter should be plotted.
+	 * 
+	 * @param plotMean
+	 *            Plot the filter if true.
+	 */
+	public void setPlotMean(boolean plotMean) {
+		this.plotMeanFilter = plotMean;
+
+		if (this.plotMeanFilter) {
+			addMeanFilterPlot();
+		} else {
+			removeMeanFilterPlot();
+		}
+	}
+
+	/**************** Add the Plot ****************/
 	/*
 	 * Add the Acceleration Plot. Create the output graph line chart.
 	 */
@@ -958,13 +972,29 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		Log.i(TAG, "[ACTIVITY] addLPFWikiPlot()");
 		if (plotLPFWiki) {
 			addPlot(plotLPFWikiXAxisTitle, PLOT_LPF_WIKI_X_AXIS_KEY,
-					plotLPFWikiXAxisColor);
+					plotLPFWikiXAxisColor);//
 			addPlot(plotLPFWikiYAxisTitle, PLOT_LPF_WIKI_Y_AXIS_KEY,
 					plotLPFWikiYAxisColor);
 			addPlot(plotLPFWikiZAxisTitle, PLOT_LPF_WIKI_Z_AXIS_KEY,
 					plotLPFWikiZAxisColor);
 
 			plotLPFWikiReady = true;
+		}
+	}
+
+	/**
+	 * Add the Mean Filter plot.
+	 */
+	private void addMeanFilterPlot() {
+		if (plotMeanFilter) {
+			addPlot(plotMeanXAxisTitle, PLOT_MEAN_X_AXIS_KEY,
+					plotMeanXAxisColor);
+			addPlot(plotMeanYAxisTitle, PLOT_MEAN_Y_AXIS_KEY,
+					plotMeanYAxisColor);
+			addPlot(plotMeanZAxisTitle, PLOT_MEAN_Z_AXIS_KEY,
+					plotMeanZAxisColor);
+
+			plotMeanReady = true;
 		}
 	}
 
@@ -981,8 +1011,71 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	private void addPlot(String title, int key, int color) {
 		Log.i(TAG, "[ACTIVITY] addPlot()");
 		dynamicPlot.addSeriesPlot(title, key, color);
-	
 
+	}
+
+	/**************** Remove Plot ****************/
+	/**
+	 * Remove a plot from the graph.
+	 * 
+	 * @param key
+	 */
+	private void removePlot(int key) {
+		Log.i(TAG, "[ACTIVITY] removePlot()");
+		dynamicPlot.removeSeriesPlot(key);
+	}
+
+	/**
+	 * Remove the Acceleration plot.
+	 */
+	// private void removeAccelerationPlot() {
+	// Log.i(TAG, "[ACTIVITY] removeAccelerationPlot()");
+	//
+	// removePlot(PLOT_ACCEL_X_AXIS_KEY);
+	// removePlot(PLOT_ACCEL_Y_AXIS_KEY);
+	// removePlot(PLOT_ACCEL_Z_AXIS_KEY);
+	//
+	// }
+
+	/**
+	 * Remove the Android Developer LPF plot.
+	 */
+	private void removeLPFAndDevPlot() {
+		Log.i(TAG, "[ACTIVITY] removeLPFAndDevPlot()");
+		if (!plotLPFAndDev) {
+			plotLPFAndDevReady = false;
+
+			removePlot(PLOT_LPF_AND_DEV_X_AXIS_KEY);
+			removePlot(PLOT_LPF_AND_DEV_Y_AXIS_KEY);
+			removePlot(PLOT_LPF_AND_DEV_Z_AXIS_KEY);
+		}
+	}
+
+	/**
+	 * Remove the Wikipedia LPF plot.
+	 */
+	private void removeLPFWikiPlot() {
+		Log.i(TAG, "[ACTIVITY] removeLPFWikiPlot()");
+		if (!plotLPFWiki) {
+			plotLPFWikiReady = false;
+
+			removePlot(PLOT_LPF_WIKI_X_AXIS_KEY);
+			removePlot(PLOT_LPF_WIKI_Y_AXIS_KEY);
+			removePlot(PLOT_LPF_WIKI_Z_AXIS_KEY);
+		}
+	}
+
+	/**
+	 * Remove the Mean Filter plot.
+	 */
+	private void removeMeanFilterPlot() {
+		if (!plotMeanFilter) {
+			plotMeanReady = false;
+
+			removePlot(PLOT_MEAN_X_AXIS_KEY);
+			removePlot(PLOT_MEAN_Y_AXIS_KEY);
+			removePlot(PLOT_MEAN_Z_AXIS_KEY);
+		}
 	}
 
 	/**************** Plot Color ****************/
@@ -1005,9 +1098,14 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		plotLPFAndDevYAxisColor = color.getLightGreen();
 		plotLPFAndDevZAxisColor = color.getLightRed();
 
+		plotMeanXAxisColor = color.getLightBlue();
+		plotMeanYAxisColor = color.getLightGreen();
+		plotMeanZAxisColor = color.getLightRed();
+
 	}
 
 	/**************** Plot Data ****************/
+	// Plot the output data in the UI
 	private void plotData() {
 		Log.i(TAG, "[ACTIVITY] PlotData");
 		dynamicPlot.setData(acceleration[0], PLOT_ACCEL_X_AXIS_KEY);
@@ -1027,26 +1125,15 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 					.setData(lpfAndDevOutput[1], PLOT_LPF_AND_DEV_Y_AXIS_KEY);
 			dynamicPlot
 					.setData(lpfAndDevOutput[2], PLOT_LPF_AND_DEV_Z_AXIS_KEY);
+		}
 
+		if (plotMeanFilter) {
+			dynamicPlot.setData(meanFilterOutput[0], PLOT_MEAN_X_AXIS_KEY);
+			dynamicPlot.setData(meanFilterOutput[1], PLOT_MEAN_Y_AXIS_KEY);
+			dynamicPlot.setData(meanFilterOutput[2], PLOT_MEAN_Z_AXIS_KEY);
 		}
 
 		dynamicPlot.draw();
-
-	}
-
-	/**************** Initial Filters ****************/
-	private void initFilters() {
-		Log.i(TAG, "[ACTIVITY] initFilters()");
-		// Create the low-pass filters
-		lpfWiki = new LPFWikipedia();
-		lpfAndDev = new LPFAndroidDeveloper();
-
-		// Initialize the low-pass filters with the saved prefs
-		lpfWiki.setAlphaStatic(staticWikiAlpha);
-		lpfWiki.setAlpha(WIKI_STATIC_ALPHA);
-
-		lpfAndDev.setAlphaStatic(staticAndDevAlpha);
-		lpfAndDev.setAlpha(AND_DEV_STATIC_ALPHA);
 
 	}
 
@@ -1058,7 +1145,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	@Override
 	public void run() {
 		Log.i(TAG, "[ACTIVITY] Run");
-		
+
 		handler.postDelayed(this, 100);
 
 		plotData();
@@ -1072,7 +1159,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	protected void onResume() {
 		Log.i(TAG, "[ACTIVITY] on Resume");
 		super.onResume();
-		
+
 	}
 
 	/****************** on Stop ******************/
@@ -1116,7 +1203,8 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		mAccXValue.setText(df.format(acceleration[0]));
 		mAccYValue.setText(df.format(acceleration[1]));
 		mAccZValue.setText(df.format(acceleration[2]));
-		//mAccMagnitude.setText("Acceleration Magnitude : "+ String.valueOf(accMagnitude));
+		// mAccMagnitude.setText("Acceleration Magnitude : "+
+		// String.valueOf(accMagnitude));
 	}
 
 	/**************** Log Data ****************/
@@ -1145,6 +1233,10 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			headers += this.plotLPFAndDevXAxisTitle + ",";
 			headers += this.plotLPFAndDevYAxisTitle + ",";
 			headers += this.plotLPFAndDevZAxisTitle + ",";
+
+			headers += this.plotMeanXAxisTitle + ",";
+			headers += this.plotMeanYAxisTitle + ",";
+			headers += this.plotMeanZAxisTitle + ",";
 
 			log = headers + "\n";
 			iconLogger.setVisibility(View.VISIBLE);
@@ -1180,6 +1272,10 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			log += lpfAndDevOutput[0] + ",";
 			log += lpfAndDevOutput[1] + ",";
 			log += lpfAndDevOutput[2] + ",";
+
+			log += meanFilterOutput[0] + ",";
+			log += meanFilterOutput[1] + ",";
+			log += meanFilterOutput[2] + ",";
 		}
 	}
 
@@ -1396,7 +1492,8 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		Log.i(TAG, "[ACTIVITY] Show Setting Dialog");
 
 		if (settingsDialog == null) {
-			settingsDialog = new SettingsDialog(this, lpfWiki, lpfAndDev);
+			settingsDialog = new SettingsDialog(this, lpfWiki, lpfAndDev,
+					meanFilter);
 			settingsDialog.setCancelable(true);
 			settingsDialog.setCanceledOnTouchOutside(true);
 		}
@@ -1415,9 +1512,11 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 
 		this.plotLPFAndDev = prefs.getBoolean("plot_lpf_and_dev", false);
 		this.plotLPFWiki = prefs.getBoolean("plot_lpf_wiki", false);
+		this.plotMeanFilter = prefs.getBoolean("plot_mean", false);
 
 		WIKI_STATIC_ALPHA = prefs.getFloat("lpf_wiki_alpha", 0.1f);
 		AND_DEV_STATIC_ALPHA = prefs.getFloat("lpf_and_dev_alpha", 0.9f);
+		MEAN_SAMPLE_WINDOW = prefs.getInt("window_mean", 50);
 
 	}
 

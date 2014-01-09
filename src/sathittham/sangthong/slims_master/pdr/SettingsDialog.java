@@ -49,17 +49,20 @@ public class SettingsDialog extends Dialog implements
 	private boolean showWikiSetAlpha = false;
 
 	private boolean plotAndDev = false;
+	private boolean plotMean = false;
 	private boolean plotWiki = false;
 
 	private LayoutInflater inflater;
 
 	private View settingsAndDevPlotView;
+	private View settingsMeanPlotView;
 	private View settingsWikiPlotView;
 
 	private View settingsAndDevDyanicAlphaView;
 	private View settingsWikiDyanicAlphaView;
 
 	private View settingsAndDevSetAlphaView;
+	private View settingsMeanSetWindowView;
 	private View settingsWikiSetAlphaView;
 
 	private View settingsAndDevToggleAlphaView;
@@ -67,6 +70,7 @@ public class SettingsDialog extends Dialog implements
 
 	private NumberPicker wikiAlphaNP;
 	private NumberPicker andDevAlphaNP;
+	private NumberPicker meanWindowNP;
 
 	private TextView wikiFilterTextView;
 	private TextView wikiAlphaTextView;
@@ -74,6 +78,9 @@ public class SettingsDialog extends Dialog implements
 	private TextView andDevFilterTextView;
 	private TextView andDevAlphaTextView;
 
+	private TextView meanFilterTextView;
+	private TextView meanWindowTextView;
+	
 	private DecimalFormat df;
 
 	private CheckBox wikiSetAlphaCheckBox;
@@ -83,8 +90,12 @@ public class SettingsDialog extends Dialog implements
 	private CheckBox andDevSetAlphaCheckBox;
 
 	private CheckBox andDevPlotCheckBox;
+	
+	private CheckBox meanPlotCheckBox;
 
 	private RelativeLayout andDevSetAlphaView;
+	
+	private RelativeLayout meanSetWindowView;
 
 	private RelativeLayout wikiSetAlphaView;
 
@@ -95,9 +106,12 @@ public class SettingsDialog extends Dialog implements
 	private LowPassFilter lpfWiki;
 
 	private LowPassFilter lpfAndDev;
+	
+	private MeanFilter meanFilter;
 
 	private float wikiAlpha;
 	private float andDevAlpha;
+	private int meanWindow;
 
 	private MainActivity activity;
 
@@ -112,7 +126,7 @@ public class SettingsDialog extends Dialog implements
 	 *            The Android Developer LPF.
 	 */
 	public SettingsDialog(MainActivity activity,
-			final LowPassFilter lpfWiki, LowPassFilter lpfAndDev)
+			final LowPassFilter lpfWiki, LowPassFilter lpfAndDev, MeanFilter meanFilter)
 	{
 		super(activity);
 
@@ -122,6 +136,7 @@ public class SettingsDialog extends Dialog implements
 
 		this.lpfWiki = lpfWiki;
 		this.lpfAndDev = lpfAndDev;
+		this.meanFilter = meanFilter;
 
 		readPrefs();
 
@@ -134,9 +149,11 @@ public class SettingsDialog extends Dialog implements
 
 		createWikiAlphaSettings();
 		createAndDevPlotSettings();
+		createMeanPlotSettings();
 
 		layout.addView(settingsWikiPlotView);
 		layout.addView(settingsAndDevPlotView);
+		layout.addView(settingsMeanPlotView);
 
 		this.setContentView(settingsView);
 
@@ -175,6 +192,18 @@ public class SettingsDialog extends Dialog implements
 				andDevAlpha = newVal * 0.001f;
 
 				lpfAndDev.setAlpha(andDevAlpha);
+			}
+		}
+		
+		if (picker.equals(meanWindowNP))
+		{
+			andDevAlphaTextView.setText(df.format(newVal));
+
+			if (showAndDevSetAlpha)
+			{
+				meanWindow = newVal;
+
+				meanFilter.setWindowSize(meanWindow);
 			}
 		}
 	}
@@ -257,6 +286,23 @@ public class SettingsDialog extends Dialog implements
 				lpfAndDev.setAlphaStatic(showAndDevSetAlpha);
 			}
 		}
+		
+		if (buttonView.equals(this.meanPlotCheckBox))
+		{
+			if (isChecked)
+			{
+				plotMean = true;
+				showMeanSettings();
+
+			}
+			else
+			{
+				plotMean = false;
+				removeMeanSettings();
+			}
+
+			this.activity.setPlotMean(plotMean);
+		}
 	}
 
 	private void createAndDevPlotSettings()
@@ -289,6 +335,33 @@ public class SettingsDialog extends Dialog implements
 		showAndDevAlphaSettings();
 	}
 
+	private void createMeanPlotSettings()
+	{
+		settingsMeanPlotView = inflater.inflate(R.layout.settings_plot, null,
+				false);
+
+		meanPlotCheckBox = (CheckBox) settingsMeanPlotView
+				.findViewById(R.id.check_box_plot);
+
+		meanPlotCheckBox.setOnCheckedChangeListener(this);
+
+		if (plotMean)
+		{
+			meanPlotCheckBox.setChecked(true);
+		}
+		else
+		{
+			meanPlotCheckBox.setChecked(false);
+		}
+
+		meanFilterTextView = (TextView) settingsMeanPlotView
+				.findViewById(R.id.label_filter_name);
+
+		meanFilterTextView.setText("Mean");
+
+		showMeanSettings();
+	}
+	
 	/**
 	 * Create the Wikipedia Settings.
 	 */
@@ -454,6 +527,53 @@ public class SettingsDialog extends Dialog implements
 			wikiSetAlphaView.addView(settingsWikiSetAlphaView);
 		}
 	}
+	
+	/**
+	 * Create the Android Developer Settings.
+	 */
+	private void showMeanSettings()
+	{
+		if (plotMean)
+		{
+			if (settingsMeanSetWindowView == null)
+			{
+				settingsMeanSetWindowView = inflater.inflate(
+						R.layout.settings_filter_window, null, false);
+			}
+
+			meanWindowTextView = (TextView) settingsMeanSetWindowView
+					.findViewById(R.id.value_window);
+			meanWindowTextView.setText(String.valueOf(50));
+
+			meanWindowNP = (NumberPicker) settingsMeanSetWindowView
+					.findViewById(R.id.numberPicker1);
+			meanWindowNP.setMaxValue(100);
+			meanWindowNP.setMinValue(0);
+			meanWindowNP.setValue(50);
+
+			meanWindowNP.setOnValueChangedListener(this);
+
+			meanSetWindowView = (RelativeLayout) settingsMeanPlotView
+					.findViewById(R.id.layout_set_values);
+
+			meanSetWindowView.removeAllViews();
+
+			meanSetWindowView.addView(settingsMeanSetWindowView);
+		}
+	}
+	
+	/**
+	 * Remove the Wikipedia Settings.
+	 */
+	private void removeMeanSettings()
+	{
+		if (!plotMean)
+		{
+			meanSetWindowView.removeView(settingsMeanSetWindowView);
+
+			settingsMeanPlotView.invalidate();
+		}
+	}
 
 	/**
 	 * Remove the Wikipedia Settings.
@@ -532,10 +652,12 @@ public class SettingsDialog extends Dialog implements
 				false);
 
 		this.plotAndDev = prefs.getBoolean("plot_lpf_and_dev", false);
+		this.plotMean = prefs.getBoolean("plot_mean", false);
 		this.plotWiki = prefs.getBoolean("plot_lpf_wiki", false);
 
 		this.wikiAlpha = prefs.getFloat("lpf_wiki_alpha", 0.1f);
 		this.andDevAlpha = prefs.getFloat("lpf_and_dev_alpha", 0.9f);
+		this.meanWindow = prefs.getInt("window_mean", 50);
 	}
 
 	/**
@@ -552,10 +674,12 @@ public class SettingsDialog extends Dialog implements
 		editor.putBoolean("show_alpha_lpf_and_dev", this.showAndDevSetAlpha);
 
 		editor.putBoolean("plot_lpf_and_dev", this.plotAndDev);
+		editor.putBoolean("plot_mean", this.plotMean);
 		editor.putBoolean("plot_lpf_wiki", this.plotWiki);
 
 		editor.putFloat("lpf_wiki_alpha", this.wikiAlpha);
 		editor.putFloat("lpf_and_dev_alpha", this.andDevAlpha);
+		editor.putInt("mean_window", this.meanWindow);
 
 		editor.commit();
 	}

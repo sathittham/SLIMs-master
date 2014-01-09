@@ -35,5 +35,6 @@
     <string name="dynamic_alpha">Dynamic Alpha</string>
     <string name="static_alpha">Static Alpha:</string>
     <string name="plot_filter">Plot Filter</string>
+    <string name="window_size">Window Size:</string>
 
 </resources>
