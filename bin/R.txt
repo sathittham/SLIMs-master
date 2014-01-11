@@ -420,7 +420,6 @@ int layout settings_filter_alpha 0x7f03000d
 int layout settings_filter_window 0x7f03000e
 int layout settings_plot 0x7f03000f
 int layout settings_toggle_dynamic_alpha 0x7f030010
-int layout settings_toggle_set_value 0x7f030011
 int menu main 0x7f0c0000
 int menu slims_menu 0x7f0c0001
 int raw beep 0x7f040000

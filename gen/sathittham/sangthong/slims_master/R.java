@@ -593,7 +593,6 @@ containing a value of this type.
         public static final int settings_filter_window=0x7f03000e;
         public static final int settings_plot=0x7f03000f;
         public static final int settings_toggle_dynamic_alpha=0x7f030010;
-        public static final int settings_toggle_set_value=0x7f030011;
     }
     public static final class menu {
         public static final int main=0x7f0c0000;

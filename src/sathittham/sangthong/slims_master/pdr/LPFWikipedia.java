@@ -1,6 +1,25 @@
 package sathittham.sangthong.slims_master.pdr;
 
+
 import android.util.Log;
+
+/*
+ * Acceleration Filter
+ * Copyright (C) 2013, Kaleb Kircher - Boki Software, Kircher Engineering, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /**
  * An implementation of the Wikipedia low-pass filter. The Wikipedia LPF, is an
@@ -11,8 +30,12 @@ import android.util.Log;
  * the time constant is the length of signals the filter should act on and dt is
  * the sample period (1/frequency) of the sensor.
  * 
+ * @author Kaleb
+ * @see http://en.wikipedia.org/wiki/Low-pass_filter
+ * @version %I%, %G%
  */
-public class LPFWikipedia implements LowPassFilter {
+public class LPFWikipedia implements LowPassFilter
+{
 	private boolean alphaStatic = false;
 
 	// Constants for the low-pass filters
@@ -28,10 +51,12 @@ public class LPFWikipedia implements LowPassFilter {
 
 	// Gravity and linear accelerations components for the
 	// Wikipedia low-pass filter
-	private float[] output = new float[] { 0, 0, 0 };
+	private float[] output = new float[]
+	{ 0, 0, 0 };
 
 	// Raw accelerometer data
-	private float[] input = new float[] { 0, 0, 0 };
+	private float[] input = new float[]
+	{ 0, 0, 0 };
 
 	/**
 	 * Add a sample.
@@ -40,11 +65,13 @@ public class LPFWikipedia implements LowPassFilter {
 	 *            The acceleration data.
 	 * @return Returns the output of the filter.
 	 */
-	public float[] addSamples(float[] acceleration) {
+	public float[] addSamples(float[] acceleration)
+	{
 		// Get a local copy of the sensor values
 		System.arraycopy(acceleration, 0, this.input, 0, acceleration.length);
 
-		if (!alphaStatic) {
+		if (!alphaStatic)
+		{
 			timestamp = System.nanoTime();
 
 			// Find the sample period (between updates).
@@ -58,7 +85,8 @@ public class LPFWikipedia implements LowPassFilter {
 
 		count++;
 
-		if (count > 5) {
+		if (count > 5)
+		{
 			// Update the Wikipedia filter
 			// y[i] = y[i] + alpha * (x[i] - y[i])
 			output[0] = output[0] + alpha * (this.input[0] - output[0]);
@@ -75,7 +103,8 @@ public class LPFWikipedia implements LowPassFilter {
 	 * @param alphaStatic
 	 *            A static value for alpha
 	 */
-	public void setAlphaStatic(boolean alphaStatic) {
+	public void setAlphaStatic(boolean alphaStatic)
+	{
 		this.alphaStatic = alphaStatic;
 	}
 
@@ -85,7 +114,8 @@ public class LPFWikipedia implements LowPassFilter {
 	 * @param alpha
 	 *            The value for alpha, 0 < alpha <= 1
 	 */
-	public void setAlpha(float alpha) {
+	public void setAlpha(float alpha)
+	{
 		this.alpha = alpha;
 	}
 }

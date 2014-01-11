@@ -1,11 +1,20 @@
 package sathittham.sangthong.slims_master.pdr;
 
 import java.text.DecimalFormat;
-import sathittham.sangthong.slims_master.R;
+
 import sathittham.sangthong.slims_master.MainActivity;
+import sathittham.sangthong.slims_master.R;
+import sathittham.sangthong.slims_master.R.id;
+import sathittham.sangthong.slims_master.R.layout;
+import sathittham.sangthong.slims_master.pdr.LowPassFilter;
+import sathittham.sangthong.slims_master.pdr.MeanFilter;
+
+
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -18,7 +27,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 /*
- * Low-Pass Linear Acceleration
+ * Acceleration Filter
  * Copyright (C) 2013, Kaleb Kircher - Boki Software, Kircher Engineering, LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -45,6 +54,8 @@ import android.widget.TextView;
 public class SettingsDialog extends Dialog implements
 		NumberPicker.OnValueChangeListener, OnCheckedChangeListener
 {
+	private static final String TAG = "SLIMs-master";
+	
 	private boolean showAndDevSetAlpha = false;
 	private boolean showWikiSetAlpha = false;
 
@@ -80,7 +91,7 @@ public class SettingsDialog extends Dialog implements
 
 	private TextView meanFilterTextView;
 	private TextView meanWindowTextView;
-	
+
 	private DecimalFormat df;
 
 	private CheckBox wikiSetAlphaCheckBox;
@@ -90,11 +101,11 @@ public class SettingsDialog extends Dialog implements
 	private CheckBox andDevSetAlphaCheckBox;
 
 	private CheckBox andDevPlotCheckBox;
-	
+
 	private CheckBox meanPlotCheckBox;
 
 	private RelativeLayout andDevSetAlphaView;
-	
+
 	private RelativeLayout meanSetWindowView;
 
 	private RelativeLayout wikiSetAlphaView;
@@ -106,7 +117,7 @@ public class SettingsDialog extends Dialog implements
 	private LowPassFilter lpfWiki;
 
 	private LowPassFilter lpfAndDev;
-	
+
 	private MeanFilter meanFilter;
 
 	private float wikiAlpha;
@@ -126,12 +137,16 @@ public class SettingsDialog extends Dialog implements
 	 *            The Android Developer LPF.
 	 */
 	public SettingsDialog(MainActivity activity,
-			final LowPassFilter lpfWiki, LowPassFilter lpfAndDev, MeanFilter meanFilter)
+			final LowPassFilter lpfWiki, LowPassFilter lpfAndDev,
+			MeanFilter meanFilter)
 	{
+		
 		super(activity);
-
+		
 		this.activity = activity;
-
+		
+		Log.i(TAG, "[SETTINGDIALOG] SettingsDialog()");
+		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 
 		this.lpfWiki = lpfWiki;
@@ -164,13 +179,14 @@ public class SettingsDialog extends Dialog implements
 	public void onStop()
 	{
 		super.onStop();
-
+		Log.i(TAG, "[SETTINGDIALOG] onStop()");
 		writePrefs();
 	}
 
 	@Override
 	public void onValueChange(NumberPicker picker, int oldVal, int newVal)
 	{
+		Log.i(TAG, "[SETTINGDIALOG] onValueChange()");
 		if (picker.equals(wikiAlphaNP))
 		{
 			wikiAlphaTextView.setText(df.format(newVal * 0.001));
@@ -194,7 +210,7 @@ public class SettingsDialog extends Dialog implements
 				lpfAndDev.setAlpha(andDevAlpha);
 			}
 		}
-		
+
 		if (picker.equals(meanWindowNP))
 		{
 			andDevAlphaTextView.setText(df.format(newVal));
@@ -211,6 +227,7 @@ public class SettingsDialog extends Dialog implements
 	@Override
 	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
 	{
+		Log.i(TAG, "[SETTINGDIALOG] onCheckedChanged()");
 		if (buttonView.equals(this.wikiPlotCheckBox))
 		{
 			if (isChecked)
@@ -286,7 +303,7 @@ public class SettingsDialog extends Dialog implements
 				lpfAndDev.setAlphaStatic(showAndDevSetAlpha);
 			}
 		}
-		
+
 		if (buttonView.equals(this.meanPlotCheckBox))
 		{
 			if (isChecked)
@@ -307,6 +324,7 @@ public class SettingsDialog extends Dialog implements
 
 	private void createAndDevPlotSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] createAndDevPlotSettings()");
 		settingsAndDevPlotView = inflater.inflate(R.layout.settings_plot, null,
 				false);
 
@@ -337,6 +355,7 @@ public class SettingsDialog extends Dialog implements
 
 	private void createMeanPlotSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] createMeanPlotSettings()");
 		settingsMeanPlotView = inflater.inflate(R.layout.settings_plot, null,
 				false);
 
@@ -361,12 +380,13 @@ public class SettingsDialog extends Dialog implements
 
 		showMeanSettings();
 	}
-	
+
 	/**
 	 * Create the Wikipedia Settings.
 	 */
 	private void createWikiAlphaSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] createWikiAlphaSettings()");
 		settingsWikiPlotView = inflater.inflate(R.layout.settings_plot, null,
 				false);
 
@@ -400,6 +420,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void showAndDevAlphaSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] howAndDevAlphaSettings()");
 		if (plotAndDev)
 		{
 			if (settingsAndDevToggleAlphaView == null)
@@ -436,6 +457,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void showAndDevSetAlphaView()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] showAndDevSetAlphaView()");
 		if (showAndDevSetAlpha)
 		{
 			if (settingsAndDevSetAlphaView == null)
@@ -465,6 +487,7 @@ public class SettingsDialog extends Dialog implements
 
 	private void showWikiAlphaSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] showWikiAlphaSettings()");
 		if (plotWiki)
 		{
 			if (settingsWikiToggleAlphaView == null)
@@ -501,6 +524,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void showWikiSetAlphaView()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] showWikiSetAlphaView()");
 		if (showWikiSetAlpha)
 		{
 			if (settingsWikiSetAlphaView == null)
@@ -527,12 +551,13 @@ public class SettingsDialog extends Dialog implements
 			wikiSetAlphaView.addView(settingsWikiSetAlphaView);
 		}
 	}
-	
+
 	/**
 	 * Create the Android Developer Settings.
 	 */
 	private void showMeanSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] showMeanSettings()");
 		if (plotMean)
 		{
 			if (settingsMeanSetWindowView == null)
@@ -561,12 +586,13 @@ public class SettingsDialog extends Dialog implements
 			meanSetWindowView.addView(settingsMeanSetWindowView);
 		}
 	}
-	
+
 	/**
 	 * Remove the Wikipedia Settings.
 	 */
 	private void removeMeanSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] removeMeanSettings()");
 		if (!plotMean)
 		{
 			meanSetWindowView.removeView(settingsMeanSetWindowView);
@@ -580,6 +606,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void removeAndDevAlphaSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] removeAndDevAlphaSettings()");
 		if (!plotAndDev)
 		{
 			andDevToggleAlphaView = (RelativeLayout) settingsAndDevPlotView
@@ -596,6 +623,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void removeAndDevSetAlphaView()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] removeAndDevSetAlphaView()");
 		if (!showAndDevSetAlpha)
 		{
 			andDevSetAlphaView = (RelativeLayout) settingsAndDevPlotView
@@ -612,6 +640,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void removeWikiAlphaSettings()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] removeWikiAlphaSettings()");
 		if (!plotWiki)
 		{
 			wikiToggleAlphaView = (RelativeLayout) settingsWikiPlotView
@@ -628,6 +657,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void removeWikiSetAlphaView()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] removeWikiSetAlphaView()");
 		if (!showWikiSetAlpha)
 		{
 			wikiSetAlphaView = (RelativeLayout) settingsWikiPlotView
@@ -644,6 +674,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void readPrefs()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] readPrefs()");
 		SharedPreferences prefs = this.getContext().getSharedPreferences(
 				"lpf_prefs", Activity.MODE_PRIVATE);
 
@@ -658,6 +689,7 @@ public class SettingsDialog extends Dialog implements
 		this.wikiAlpha = prefs.getFloat("lpf_wiki_alpha", 0.1f);
 		this.andDevAlpha = prefs.getFloat("lpf_and_dev_alpha", 0.9f);
 		this.meanWindow = prefs.getInt("window_mean", 50);
+
 	}
 
 	/**
@@ -665,6 +697,7 @@ public class SettingsDialog extends Dialog implements
 	 */
 	private void writePrefs()
 	{
+		Log.i(TAG, "[SETTINGDIALOG] writePrefs()");
 		// Write out the offsets to the user preferences.
 		SharedPreferences.Editor editor = this.getContext()
 				.getSharedPreferences("lpf_prefs", Activity.MODE_PRIVATE)
