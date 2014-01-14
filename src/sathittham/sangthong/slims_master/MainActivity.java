@@ -19,21 +19,29 @@ import sathittham.sangthong.slims_master.pdr.PlotColor;
 import sathittham.sangthong.slims_master.pdr.SettingsDialog;
 import sathittham.sangthong.slims_master.pdr.StdDev;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaScannerConnection;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.nfc.NfcAdapter;
+import android.nfc.NfcManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.StrictMode;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -126,12 +134,14 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	// Values to calculate Number of steps,distance,compass
 	private float previousY;
 	private float currentY;
-	private float accMagnitude;
+	
 	private float input;
 	private float resetValue;
 	private float mDistance;
 	private float mHeading;
 	private int numSteps;
+	
+	private float accMagnitude;
 	private int state;
 
 	// recode the compass picture angle turned
@@ -327,6 +337,29 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		// Initialize the plots
 		initColor();
 		initPlots();
+		
+		//Check for available NFC Adapter
+		PackageManager pm = getPackageManager();
+		if(!pm.hasSystemFeature(PackageManager.FEATURE_NFC)){
+			//NFC Feature not Found
+			Toast.makeText(this, "You Don't have NFC Feature", Toast.LENGTH_SHORT).show();
+		} else{
+			//NFC Feature found
+			Toast.makeText(this, "You have NFC Feature, ENJOY!", Toast.LENGTH_SHORT).show();
+		}
+		
+		// Check Internet Connection
+		if (haveNetworkConnection()) {
+			//Have Internet Connection
+			Toast.makeText(this, "You Have Interent Access", Toast.LENGTH_SHORT)
+					.show();
+		} else {
+			//DON'T Have Internet Connection
+			Toast.makeText(this,
+					"You DON'T Have Interent Access, Please turn it on !",
+					Toast.LENGTH_SHORT).show();
+			showNoConnectionDialog(this);
+		}
 
 		enableSensorListening();
 
@@ -334,16 +367,15 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		sensorManager = (SensorManager) this
 				.getSystemService(Context.SENSOR_SERVICE);
 
+		// Loading Map
 		try {
-			// Loading map
 			initMap();
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+		// Get Tag Message
 		try {
-			// get Tag Message
 			message = getTagMessage();
 
 			if (message != null || !message.isEmpty()) {
@@ -495,19 +527,27 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			acceleration[1] = acceleration[1] / SensorManager.GRAVITY_EARTH; // y
 			acceleration[2] = acceleration[2] / SensorManager.GRAVITY_EARTH; // z
 
-//			lpfWikiOutput = lpfWiki.addSamples(acceleration);
-//			lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
-//			meanFilterOutput = meanFilter.filterFloat(acceleration);
-
-			 if (plotLPFWiki) {
-			 lpfWikiOutput = lpfWiki.addSamples(acceleration);
-			 }
-			 if (plotLPFAndDev) {
-			 lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
-			 }
-			 if (plotMeanFilter) {
-			 meanFilterOutput = meanFilter.filterFloat(acceleration);
-			 }
+			// lpfWikiOutput = lpfWiki.addSamples(acceleration);
+			// lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
+			// meanFilterOutput = meanFilter.filterFloat(acceleration);
+			
+			
+			if (plotLPFWiki) {
+				lpfWikiOutput = lpfWiki.addSamples(acceleration);
+			}
+			if (plotLPFAndDev) {
+				lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
+			}
+			if (plotMeanFilter) {
+				meanFilterOutput = meanFilter.filterFloat(acceleration);
+			}
+			
+			//Magnitude Calculation
+			float x = acceleration[0];
+			float y = acceleration[1];
+			float z = acceleration[2];
+			
+			accMagnitude = (float) Math.sqrt((x*x)+(y*y)+(z*z));
 
 		}
 
@@ -880,6 +920,144 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		varianceMean = new StdDev();
 	}
 
+	// Check both Wi-fi and Mobile Internet connection
+	private boolean haveNetworkConnection() {
+		boolean haveConnectedWifi = false;
+		boolean haveConnectedMobile = false;
+
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+		for (NetworkInfo ni : netInfo) {
+			if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+				if (ni.isConnected())
+					haveConnectedWifi = true;
+			if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+				if (ni.isConnected())
+					haveConnectedMobile = true;
+		}
+		return haveConnectedWifi || haveConnectedMobile;
+	}
+
+	// Display a dialog that user has no Internet connection
+	public static void showNoConnectionDialog(Context ctx1) {
+		final Context ctx = ctx1;
+		AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
+		builder.setCancelable(true);
+		builder.setMessage("You don't have Internet access, Please turn it On !");
+		builder.setTitle("Internet Connection");
+		builder.setPositiveButton("Settings",
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						ctx.startActivity(new Intent(Settings.ACTION_SETTINGS));
+					}
+				});
+		builder.setNegativeButton("Cancle",
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						return;
+					}
+				});
+		builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				return;
+
+			}
+		});
+		builder.show();
+	}
+	
+	//Step count Finite State Machine
+	private void fsm_stepcount(){
+		state = 0;
+		input = accMagnitude;
+		
+		switch (state){
+		case 0:
+			//State 0: Not Walking
+			if(input>thr){
+				state = 1;
+			} 
+			if(input<thr) {
+				state = 0;
+			}
+			break;
+			
+		case 1:
+			//State 1: User Possibly started a step
+			if(input>pos_peek_thr){
+				state = 2;
+			}
+			
+			if(input>thr & input>pos_peek_thr){
+				state = 1;
+			}
+			
+			if(input<thr){
+				state = 4;
+			}
+			break;
+			
+		case 2:
+			//State 2: Positive Peak has been reached
+			if(input<neg_peek_thr){
+				state = 3;
+			}
+			
+			if(input>pos_peek_thr){
+				state = 2;
+			}
+			break;
+			
+		case 3:
+			//State 3: Negative Peak has been reached
+			if(input>neg_peek_thr){
+				state = 5;
+			}
+			
+			if(input<neg_peek_thr){
+				state = 3;
+			}
+			break;
+			
+		case 4:
+			//State 4: tolerate the nosise
+			if(input>thr){
+				state = 1;
+			}
+			
+			if(input<thr){
+				state = 0;
+			}
+			break;
+			
+		case 5:
+			//State 5: tolerate the nosise
+			if(input>neg_thr){
+				state = 6;
+			}
+			if(input>neg_peek_thr & input<neg_thr){
+				state = 5;
+			}
+			break;
+			
+		case 6:
+			//State 6: terminal state
+			numSteps++;
+			
+			if(input>thr){
+				state = 1;
+			}
+			
+			if(input<thr){
+				state = 0;
+			}
+			break;
+		}
+	}
+
 	/**************** Set Graph Plot ****************/
 	/**
 	 * Indicate if the Wikipedia LPF should be plotted.
@@ -986,15 +1164,15 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	 */
 	private void addMeanFilterPlot() {
 		Log.i(TAG, "[MAINACTIVITY] addMeanFilterPlot()");
-		if (plotLPFAndDev) {
-			addGraphPlot(plotLPFAndDevXAxisTitle, PLOT_LPF_AND_DEV_X_AXIS_KEY,
-					plotLPFAndDevXAxisColor);
-			addGraphPlot(plotLPFAndDevYAxisTitle, PLOT_LPF_AND_DEV_Y_AXIS_KEY,
-					plotLPFAndDevYAxisColor);
-			addGraphPlot(plotLPFAndDevZAxisTitle, PLOT_LPF_AND_DEV_Z_AXIS_KEY,
-					plotLPFAndDevZAxisColor);
+		if (plotMeanFilter) {
+			addGraphPlot(plotMeanXAxisTitle, PLOT_MEAN_X_AXIS_KEY,
+					plotMeanXAxisColor);
+			addGraphPlot(plotMeanYAxisTitle, PLOT_MEAN_Y_AXIS_KEY,
+					plotMeanYAxisColor);
+			addGraphPlot(plotMeanZAxisTitle, PLOT_MEAN_Z_AXIS_KEY,
+					plotMeanZAxisColor);
 
-			plotLPFAndDevReady = true;
+			plotMeanReady = true;
 		}
 	}
 

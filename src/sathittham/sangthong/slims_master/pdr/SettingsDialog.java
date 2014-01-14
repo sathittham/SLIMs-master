@@ -95,11 +95,9 @@ public class SettingsDialog extends Dialog implements
 	private DecimalFormat df;
 
 	private CheckBox wikiSetAlphaCheckBox;
-
 	private CheckBox wikiPlotCheckBox;
 
 	private CheckBox andDevSetAlphaCheckBox;
-
 	private CheckBox andDevPlotCheckBox;
 
 	private CheckBox meanPlotCheckBox;
