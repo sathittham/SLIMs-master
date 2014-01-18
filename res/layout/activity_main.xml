@@ -164,21 +164,34 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/row3" >
 
-        <ImageView
-            android:id="@+id/log_image"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="bottom"
-            android:src="@drawable/log_icon2" />
+        <LinearLayout
+            android:id="@+id/log_image_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" >
 
-        <com.androidplot.xy.XYPlot
-            android:id="@+id/plot_sensor"
-            android:layout_width="fill_parent"
-            android:layout_height="200dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginTop="10dp"
-            title="Acceleration" />
+            <ImageView
+                android:id="@+id/log_image"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/log_icon2" 
+                android:layout_gravity="bottom"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/graph_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" >
+
+            <com.androidplot.xy.XYPlot
+                android:id="@+id/plot_sensor"
+                android:layout_width="fill_parent"
+                android:layout_height="200dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp" />
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -188,11 +201,24 @@
         android:layout_above="@+id/row4"
         android:orientation="vertical" >
 
-        <TextView
-            android:id="@+id/accel_magnitude_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accelerotion Magnitude :" />
+        <LinearLayout
+            android:id="@+id/accel_mag_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/accel_magnitude_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accelerotion Magnitude :" />
+
+            <TextView
+                android:id="@+id/accel_magnitude_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/accel_value"

@@ -1,6 +1,5 @@
 package sathittham.sangthong.slims_master.pdr;
 
-
 import android.util.Log;
 
 /*
@@ -34,8 +33,7 @@ import android.util.Log;
  * @see http://en.wikipedia.org/wiki/Low-pass_filter
  * @version %I%, %G%
  */
-public class LPFWikipedia implements LowPassFilter
-{
+public class LPFWikipedia implements LowPassFilter {
 	private boolean alphaStatic = false;
 
 	// Constants for the low-pass filters
@@ -51,12 +49,12 @@ public class LPFWikipedia implements LowPassFilter
 
 	// Gravity and linear accelerations components for the
 	// Wikipedia low-pass filter
-	private float[] output = new float[]
-	{ 0, 0, 0 };
+	private float[] gravity = new float[] { 0, 0, 0 };
+
+	private float[] linearAcceleration = new float[] { 0, 0, 0 };
 
 	// Raw accelerometer data
-	private float[] input = new float[]
-	{ 0, 0, 0 };
+	private float[] input = new float[] { 0, 0, 0 };
 
 	/**
 	 * Add a sample.
@@ -65,13 +63,11 @@ public class LPFWikipedia implements LowPassFilter
 	 *            The acceleration data.
 	 * @return Returns the output of the filter.
 	 */
-	public float[] addSamples(float[] acceleration)
-	{
+	public float[] addSamples(float[] acceleration) {
 		// Get a local copy of the sensor values
 		System.arraycopy(acceleration, 0, this.input, 0, acceleration.length);
 
-		if (!alphaStatic)
-		{
+		if (!alphaStatic) {
 			timestamp = System.nanoTime();
 
 			// Find the sample period (between updates).
@@ -85,16 +81,19 @@ public class LPFWikipedia implements LowPassFilter
 
 		count++;
 
-		if (count > 5)
-		{
+		if (count > 5) {
 			// Update the Wikipedia filter
 			// y[i] = y[i] + alpha * (x[i] - y[i])
-			output[0] = output[0] + alpha * (this.input[0] - output[0]);
-			output[1] = output[1] + alpha * (this.input[1] - output[1]);
-			output[2] = output[2] + alpha * (this.input[2] - output[2]);
+			gravity[0] = gravity[0] + alpha * (this.input[0] - gravity[0]);
+			gravity[1] = gravity[1] + alpha * (this.input[1] - gravity[1]);
+			gravity[2] = gravity[2] + alpha * (this.input[2] - gravity[2]);
+
+			linearAcceleration[0] = input[0] - gravity[0];
+			linearAcceleration[1] = input[1] - gravity[1];
+			linearAcceleration[2] = input[2] - gravity[2];
 		}
 
-		return output;
+		return linearAcceleration;
 	}
 
 	/**
@@ -103,8 +102,7 @@ public class LPFWikipedia implements LowPassFilter
 	 * @param alphaStatic
 	 *            A static value for alpha
 	 */
-	public void setAlphaStatic(boolean alphaStatic)
-	{
+	public void setAlphaStatic(boolean alphaStatic) {
 		this.alphaStatic = alphaStatic;
 	}
 
@@ -114,8 +112,7 @@ public class LPFWikipedia implements LowPassFilter
 	 * @param alpha
 	 *            The value for alpha, 0 < alpha <= 1
 	 */
-	public void setAlpha(float alpha)
-	{
+	public void setAlpha(float alpha) {
 		this.alpha = alpha;
 	}
 }

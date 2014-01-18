@@ -51,7 +51,7 @@ import android.widget.TextView;
  * @author Kaleb
  * @version %I%, %G%
  */
-public class SettingsDialog extends Dialog implements
+public class FilterSettingsDialog extends Dialog implements
 		NumberPicker.OnValueChangeListener, OnCheckedChangeListener
 {
 	private static final String TAG = "SLIMs-master";
@@ -134,7 +134,7 @@ public class SettingsDialog extends Dialog implements
 	 * @param lpfAndDev
 	 *            The Android Developer LPF.
 	 */
-	public SettingsDialog(MainActivity activity,
+	public FilterSettingsDialog(MainActivity activity,
 			final LowPassFilter lpfWiki, LowPassFilter lpfAndDev,
 			MeanFilter meanFilter)
 	{
@@ -155,7 +155,7 @@ public class SettingsDialog extends Dialog implements
 
 		inflater = getLayoutInflater();
 
-		View settingsView = inflater.inflate(R.layout.settings, null, false);
+		View settingsView = inflater.inflate(R.layout.filter_settings, null, false);
 
 		LinearLayout layout = (LinearLayout) settingsView
 				.findViewById(R.id.layout_settings_content);

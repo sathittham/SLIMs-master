@@ -16,8 +16,10 @@ import sathittham.sangthong.slims_master.pdr.LPFWikipedia;
 import sathittham.sangthong.slims_master.pdr.LowPassFilter;
 import sathittham.sangthong.slims_master.pdr.MeanFilter;
 import sathittham.sangthong.slims_master.pdr.PlotColor;
-import sathittham.sangthong.slims_master.pdr.SettingsDialog;
+import sathittham.sangthong.slims_master.pdr.FilterSettingsDialog;
 import sathittham.sangthong.slims_master.pdr.StdDev;
+import sathittham.sangthong.slims_master.pdr.StepDetector;
+import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -35,8 +37,6 @@ import android.media.MediaScannerConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.nfc.NfcAdapter;
-import android.nfc.NfcManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -53,6 +53,7 @@ import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,6 +79,8 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	// check is running?
 	private boolean mIsRunning = false;
 
+	private boolean showGraphLayout = true;
+
 	// Handler for the UI plots so everything plots smoothly
 	private Handler handler;
 
@@ -86,7 +89,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	private DecimalFormat dfLong;
 
 	// Setting Dialog
-	private SettingsDialog settingsDialog;
+	private FilterSettingsDialog settingsDialog;
 
 	// Sensor Manager
 	private SensorManager sensorManager;
@@ -115,17 +118,24 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	// Display for Compass picture
 	private ImageView mCompassImage;
 
+	// Display for Magnitude Value
+	private TextView mMagnitudeValue;
+
 	// Button
 	private Button mStartBtn;
 	private Button mStopBtn;
 	private Button mResetBtn;
 
 	/******************* PDR Variable *******************/
+	private StepDetector stepDetector;
+
 	// Outputs for the acceleration and LPFs
 	private float[] acceleration = new float[3];
 	private float[] lpfWikiOutput = new float[3];
 	private float[] lpfAndDevOutput = new float[3];
 	private float[] meanFilterOutput = new float[3];
+
+	private int stepCountOutput;
 
 	// Sensor
 	Sensor accSensor;
@@ -134,14 +144,15 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	// Values to calculate Number of steps,distance,compass
 	private float previousY;
 	private float currentY;
-	
+
 	private float input;
 	private float resetValue;
 	private float mDistance;
 	private float mHeading;
 	private int numSteps;
-	
+
 	private float accMagnitude;
+	private float threshold;
 	private int state;
 
 	// recode the compass picture angle turned
@@ -239,6 +250,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 
 	/***************** Graph Plot *****************/
 	private XYPlot plot;
+	private LinearLayout graphLayout;
 
 	// Plot colors
 	private PlotColor color;
@@ -337,35 +349,34 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		// Initialize the plots
 		initColor();
 		initPlots();
-		
-		//Check for available NFC Adapter
+
+		// Check for available NFC Adapter
 		PackageManager pm = getPackageManager();
-		if(!pm.hasSystemFeature(PackageManager.FEATURE_NFC)){
-			//NFC Feature not Found
-			Toast.makeText(this, "You Don't have NFC Feature", Toast.LENGTH_SHORT).show();
-		} else{
-			//NFC Feature found
-			Toast.makeText(this, "You have NFC Feature, ENJOY!", Toast.LENGTH_SHORT).show();
+		if (!pm.hasSystemFeature(PackageManager.FEATURE_NFC)) {
+			// NFC Feature not Found
+			Toast.makeText(this, "You Don't have NFC Feature",
+					Toast.LENGTH_SHORT).show();
+		} else {
+			// NFC Feature found
+			Toast.makeText(this, "You have NFC Feature, ENJOY!",
+					Toast.LENGTH_SHORT).show();
 		}
-		
+
 		// Check Internet Connection
 		if (haveNetworkConnection()) {
-			//Have Internet Connection
+			// Have Internet Connection
 			Toast.makeText(this, "You Have Interent Access", Toast.LENGTH_SHORT)
 					.show();
 		} else {
-			//DON'T Have Internet Connection
+			// DON'T Have Internet Connection
 			Toast.makeText(this,
 					"You DON'T Have Interent Access, Please turn it on !",
 					Toast.LENGTH_SHORT).show();
 			showNoConnectionDialog(this);
 		}
 
+		// Prepare for Sensor Manager listening
 		enableSensorListening();
-
-		// Get the sensor manager ready
-		sensorManager = (SensorManager) this
-				.getSystemService(Context.SENSOR_SERVICE);
 
 		// Loading Map
 		try {
@@ -448,13 +459,13 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 
 			handler.post(this);
 
-			// Enable Accelerometer sensor listener
+			// Start Accelerometer sensor listener
 			sensorManager.registerListener(accelListener, accSensor,
 					SensorManager.SENSOR_DELAY_FASTEST);
-			// Enable Orientation Sensor listener
+			// Start Orientation Sensor listener
 			sensorManager.registerListener(orientationListener,
 					orientationSensor, SensorManager.SENSOR_DELAY_FASTEST);
-			updateAccelerationText();
+			// updateAccelerationText();
 			break;
 
 		case R.id.stop_btn:
@@ -494,6 +505,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			xAxis.setText(String.valueOf("X: " + resetValue));
 			yAxis.setText(String.valueOf("Y: " + resetValue));
 			zAxis.setText(String.valueOf("Z: " + resetValue));
+			mMagnitudeValue.setText(String.valueOf(resetValue));
 			mDistanceValue.setText(String.valueOf(resetValue));
 			mCompassValue.setText(String.valueOf("Heading: " + resetValue));
 
@@ -530,10 +542,10 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			// lpfWikiOutput = lpfWiki.addSamples(acceleration);
 			// lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
 			// meanFilterOutput = meanFilter.filterFloat(acceleration);
-			
-			
+
 			if (plotLPFWiki) {
 				lpfWikiOutput = lpfWiki.addSamples(acceleration);
+				// stepCountOutput=stepDetector.stepCounter(lpfWikiOutput);
 			}
 			if (plotLPFAndDev) {
 				lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
@@ -541,13 +553,6 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			if (plotMeanFilter) {
 				meanFilterOutput = meanFilter.filterFloat(acceleration);
 			}
-			
-			//Magnitude Calculation
-			float x = acceleration[0];
-			float y = acceleration[1];
-			float z = acceleration[2];
-			
-			accMagnitude = (float) Math.sqrt((x*x)+(y*y)+(z*z));
 
 		}
 
@@ -815,6 +820,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		Log.i(TAG, "[MAINACTIVITY] initPlots()");
 
 		// Create the graph plot
+		LinearLayout graphLayout = (LinearLayout) findViewById(R.id.graph_layout);
 		XYPlot plot = (XYPlot) findViewById(R.id.plot_sensor);
 		plot.setTitle("Acceleration");
 		dynamicPlot = new DynamicLinePlot(plot);
@@ -845,46 +851,6 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		mStartBtn.setEnabled(true);
 		mStopBtn.setEnabled(false);
 		mResetBtn.setEnabled(false);
-	}
-
-	/**
-	 * Initialize the Text View Sensor Outputs.
-	 */
-	private void initTextOutputs() {
-
-		Log.i(TAG, "[MAINACTIVITY] initTextViewOutputs()");
-
-		// Format the UI outputs so they look nice
-		df = new DecimalFormat("#.##");
-
-		// Attach objects to XML View
-		xAxis = (TextView) findViewById(R.id.accel_x_value);
-		yAxis = (TextView) findViewById(R.id.accel_y_value);
-		zAxis = (TextView) findViewById(R.id.accel_z_value);
-		mCommandValue = (TextView) findViewById(R.id.command_value);
-		mSumDistance = (TextView) findViewById(R.id.sumDistance_textView);
-
-		// Attach Step and distance View object to XML
-		mStepValue = (TextView) findViewById(R.id.step_value);
-		mDistanceValue = (TextView) findViewById(R.id.distance_value);
-
-		// set the values of threshold
-		thr = 0.6;
-		pos_peek_thr = 1.8;
-		neg_peek_thr = -1;
-		neg_thr = -0.6;
-
-		// Initialize state
-		state = 0;
-
-		// Initialize Values
-		previousY = 0;
-		currentY = 0;
-		numSteps = 0;
-		accMagnitude = 0;
-		mDistance = 0;
-		mHeading = 0;
-		input = 0;
 	}
 
 	/**
@@ -968,94 +934,221 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		});
 		builder.show();
 	}
-	
-	//Step count Finite State Machine
-	private void fsm_stepcount(){
+
+	/**
+	 * Initialize the Text View Sensor Outputs.
+	 */
+	private void initTextOutputs() {
+
+		Log.i(TAG, "[MAINACTIVITY] initTextViewOutputs()");
+
+		// Format the UI outputs so they look nice
+		df = new DecimalFormat("#.##");
+
+		// Attach objects to XML View
+		xAxis = (TextView) findViewById(R.id.accel_x_value);
+		yAxis = (TextView) findViewById(R.id.accel_y_value);
+		zAxis = (TextView) findViewById(R.id.accel_z_value);
+		mCommandValue = (TextView) findViewById(R.id.command_value);
+		mSumDistance = (TextView) findViewById(R.id.sumDistance_textView);
+		mMagnitudeValue = (TextView) findViewById(R.id.accel_magnitude_value);
+
+		// Attach Step and distance View object to XML
+		mStepValue = (TextView) findViewById(R.id.step_value);
+		mDistanceValue = (TextView) findViewById(R.id.distance_value);
+
+		// set the values of threshold
+		thr = 0.025;
+		pos_peek_thr = 1.8;
+		neg_peek_thr = -1;
+		neg_thr = -0.6;
+
+		// Initialize state
 		state = 0;
+
+		// Initialize Values
+		previousY = 0;
+		currentY = 0;
+		numSteps = 0;
+		accMagnitude = 0;
+		mDistance = 0;
+		mHeading = 0;
+		input = 0;
+	}
+
+	// Step count thresholding
+	private void thr_stepcount() {
+
+		// Magnitude Calculation
+		float x = lpfAndDevOutput[0];
+		float y = lpfAndDevOutput[1];
+		float z = lpfAndDevOutput[2];
+
+		accMagnitude = (float) Math.sqrt((x * x) + (y * y) + (z * z));
+		mMagnitudeValue.setText(df.format(accMagnitude));
+
+		// Fetch current y
+		currentY = y;
+
+		// Measure if a step is taken
+		if (Math.abs(currentY - previousY) > thr) {
+			numSteps++;
+			mStepValue.setText(String.valueOf(numSteps));
+		}
+
+		// Store the previous Y
+		previousY = y;
+
+	}
+
+	// Step count Finite State Machine
+	private void fsm_stepcount() {
 		input = accMagnitude;
-		
-		switch (state){
+
+		switch (state) {
 		case 0:
-			//State 0: Not Walking
-			if(input>thr){
+			// State 0: Not Walking
+			if (input > thr) {
 				state = 1;
-			} 
-			if(input<thr) {
+			}
+			if (input < thr) {
 				state = 0;
 			}
 			break;
-			
+
 		case 1:
-			//State 1: User Possibly started a step
-			if(input>pos_peek_thr){
+			// State 1: User Possibly started a step
+			if (input > pos_peek_thr) {
 				state = 2;
 			}
-			
-			if(input>thr & input>pos_peek_thr){
+
+			if (input > thr & input > pos_peek_thr) {
 				state = 1;
 			}
-			
-			if(input<thr){
+
+			if (input < thr) {
 				state = 4;
 			}
 			break;
-			
+
 		case 2:
-			//State 2: Positive Peak has been reached
-			if(input<neg_peek_thr){
+			// State 2: Positive Peak has been reached
+			if (input < neg_peek_thr) {
 				state = 3;
 			}
-			
-			if(input>pos_peek_thr){
+
+			if (input > pos_peek_thr) {
 				state = 2;
 			}
 			break;
-			
+
 		case 3:
-			//State 3: Negative Peak has been reached
-			if(input>neg_peek_thr){
+			// State 3: Negative Peak has been reached
+			if (input > neg_peek_thr) {
 				state = 5;
 			}
-			
-			if(input<neg_peek_thr){
+
+			if (input < neg_peek_thr) {
 				state = 3;
 			}
 			break;
-			
+
 		case 4:
-			//State 4: tolerate the nosise
-			if(input>thr){
+			// State 4: tolerate the nosise
+			if (input > thr) {
 				state = 1;
 			}
-			
-			if(input<thr){
+
+			if (input < thr) {
 				state = 0;
 			}
 			break;
-			
+
 		case 5:
-			//State 5: tolerate the nosise
-			if(input>neg_thr){
+			// State 5: tolerate the nosise
+			if (input > neg_thr) {
 				state = 6;
 			}
-			if(input>neg_peek_thr & input<neg_thr){
+			if (input > neg_peek_thr & input < neg_thr) {
 				state = 5;
 			}
 			break;
-			
+
 		case 6:
-			//State 6: terminal state
+			// State 6: terminal state
 			numSteps++;
-			
-			if(input>thr){
+
+			if (input > thr) {
 				state = 1;
 			}
-			
-			if(input<thr){
+
+			if (input < thr) {
 				state = 0;
 			}
 			break;
+
+		default:
+			Toast.makeText(this, "Never get here", Toast.LENGTH_SHORT).show();
+
 		}
+	}
+
+	/**************** Update UI ****************/
+	/**
+	 * Update the acceleration sensor output Text Views.
+	 */
+	private void updateAccelerationText() {
+		Log.i(TAG, "[MAINACTIVITY] updateAccelerationText()");
+		// Update the view with the new acceleration data
+		// xAxis.setText(df.format(acceleration[0]));
+		// yAxis.setText(df.format(acceleration[1]));
+		// zAxis.setText(df.format(acceleration[2]));
+
+		xAxis.setText(df.format(lpfAndDevOutput[0]));
+		yAxis.setText(df.format(lpfAndDevOutput[1]));
+		zAxis.setText(df.format(lpfAndDevOutput[2]));
+	}
+
+	/*
+	 * Update the Step Count Output Text Views
+	 */
+	private void updateStepCount() {
+		Log.i(TAG, "[MAINACTIVITY] updateStepCount()");
+		thr_stepcount();
+		// mStepValue.setText(String.valueOf(numSteps));
+	}
+
+	/**
+	 * Update the graph plot.
+	 */
+	private void updateGraphPlot() {
+		Log.i(TAG, "[MAINACTIVITY] updateGraphPlot()");
+		dynamicPlot.setData(acceleration[0], PLOT_ACCEL_X_AXIS_KEY);
+		dynamicPlot.setData(acceleration[1], PLOT_ACCEL_Y_AXIS_KEY);
+		dynamicPlot.setData(acceleration[2], PLOT_ACCEL_Z_AXIS_KEY);
+
+		if (plotLPFWiki) {
+			dynamicPlot.setData(lpfWikiOutput[0], PLOT_LPF_WIKI_X_AXIS_KEY);
+			dynamicPlot.setData(lpfWikiOutput[1], PLOT_LPF_WIKI_Y_AXIS_KEY);
+			dynamicPlot.setData(lpfWikiOutput[2], PLOT_LPF_WIKI_Z_AXIS_KEY);
+		}
+
+		if (plotLPFAndDev) {
+			dynamicPlot
+					.setData(lpfAndDevOutput[0], PLOT_LPF_AND_DEV_X_AXIS_KEY);
+			dynamicPlot
+					.setData(lpfAndDevOutput[1], PLOT_LPF_AND_DEV_Y_AXIS_KEY);
+			dynamicPlot
+					.setData(lpfAndDevOutput[2], PLOT_LPF_AND_DEV_Z_AXIS_KEY);
+		}
+
+		if (plotMeanFilter) {
+			dynamicPlot.setData(meanFilterOutput[0], PLOT_MEAN_X_AXIS_KEY);
+			dynamicPlot.setData(meanFilterOutput[1], PLOT_MEAN_Y_AXIS_KEY);
+			dynamicPlot.setData(meanFilterOutput[2], PLOT_MEAN_Z_AXIS_KEY);
+		}
+
+		dynamicPlot.draw();
 	}
 
 	/**************** Set Graph Plot ****************/
@@ -1279,6 +1372,8 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		updateGraphPlot();
 
 		updateAccelerationText();
+
+		updateStepCount();
 	}
 
 	/**************** Run ****************/
@@ -1338,51 +1433,6 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		if (logData) {
 			writeLogToFile();
 		}
-	}
-
-	/**************** Update UI ****************/
-	/**
-	 * Update the acceleration sensor output Text Views.
-	 */
-	private void updateAccelerationText() {
-		Log.i(TAG, "[MAINACTIVITY] updateAccelerationText()");
-		// Update the view with the new acceleration data
-		xAxis.setText(df.format(acceleration[0]));
-		yAxis.setText(df.format(acceleration[1]));
-		zAxis.setText(df.format(acceleration[2]));
-	}
-
-	/**
-	 * Update the graph plot.
-	 */
-	private void updateGraphPlot() {
-		Log.i(TAG, "[MAINACTIVITY] updateGraphPlot()");
-		dynamicPlot.setData(acceleration[0], PLOT_ACCEL_X_AXIS_KEY);
-		dynamicPlot.setData(acceleration[1], PLOT_ACCEL_Y_AXIS_KEY);
-		dynamicPlot.setData(acceleration[2], PLOT_ACCEL_Z_AXIS_KEY);
-
-		if (plotLPFWiki) {
-			dynamicPlot.setData(lpfWikiOutput[0], PLOT_LPF_WIKI_X_AXIS_KEY);
-			dynamicPlot.setData(lpfWikiOutput[1], PLOT_LPF_WIKI_Y_AXIS_KEY);
-			dynamicPlot.setData(lpfWikiOutput[2], PLOT_LPF_WIKI_Z_AXIS_KEY);
-		}
-
-		if (plotLPFAndDev) {
-			dynamicPlot
-					.setData(lpfAndDevOutput[0], PLOT_LPF_AND_DEV_X_AXIS_KEY);
-			dynamicPlot
-					.setData(lpfAndDevOutput[1], PLOT_LPF_AND_DEV_Y_AXIS_KEY);
-			dynamicPlot
-					.setData(lpfAndDevOutput[2], PLOT_LPF_AND_DEV_Z_AXIS_KEY);
-		}
-
-		if (plotMeanFilter) {
-			dynamicPlot.setData(meanFilterOutput[0], PLOT_MEAN_X_AXIS_KEY);
-			dynamicPlot.setData(meanFilterOutput[1], PLOT_MEAN_Y_AXIS_KEY);
-			dynamicPlot.setData(meanFilterOutput[2], PLOT_MEAN_Z_AXIS_KEY);
-		}
-
-		dynamicPlot.draw();
 	}
 
 	/**************** Log Data ****************/
@@ -1575,15 +1625,21 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 			startActivity(intent2);
 			return true;
 
-			/* Setting */
-		case R.id.slims_menu_settings_setting:
+			/* User Info */
+		case R.id.slims_menu_settings_user_info:
+			Intent intent4 = new Intent(MainActivity.this,
+					UserInfoActivity.class);
+			startActivity(intent4);
+			return true;
+
+			/* Filters Setting */
+		case R.id.slims_menu_Settings_filter_setting:
 			showSettingsDialog();
 			return true;
 
-			/* Graph */
-		case R.id.slims_menu_graph:
-			Toast.makeText(this, "Graph", Toast.LENGTH_SHORT).show();
-			// showGraphDisplay();
+			/* Setting */
+		case R.id.slims_menu_settings_setting:
+			showSettingsDialog();
 			return true;
 
 			/* Help */
@@ -1597,62 +1653,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 	}
 
 	/**************** Show Dialog ****************/
-	private void showGraphDisplay() {
-		Log.i(TAG, "[MAINACTIVITY] showGraphDisplay()");
-		if (showGraph == false) {
-			Log.i(TAG, "[MAINACTIVITY] show graph display visible");
-			plot.setVisibility(View.VISIBLE);
-			showGraph = true;
-		} else {
-			Log.i(TAG, "[MAINACTIVITY] show graph display invisible");
-			plot.setVisibility(View.INVISIBLE);
-			showGraph = false;
-		}
-
-	}
-
-	private void showSearchDialog() {
-		Log.i(TAG, "[MAINACTIVITY] showSearchDialog()");
-		Dialog SearchDialog = new Dialog(this);
-		SearchDialog.setCancelable(true);
-		SearchDialog.setCanceledOnTouchOutside(true);
-
-		SearchDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-		SearchDialog.setContentView(getLayoutInflater().inflate(
-				R.layout.activity_search, null));
-
-		SearchDialog.show();
-	}
-
-	private void showSearchNFCDialog() {
-		Log.i(TAG, "[MAINACTIVITY] howSearchNFCDialog()");
-		Dialog searchNFCDialog = new Dialog(this);
-		searchNFCDialog.setCancelable(true);
-		searchNFCDialog.setCanceledOnTouchOutside(true);
-
-		searchNFCDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-		searchNFCDialog.setContentView(getLayoutInflater().inflate(
-				R.layout.activity_search_nfc, null));
-
-		searchNFCDialog.show();
-	}
-
-	private void showWriteNFCDialog() {
-		Log.i(TAG, "[MAINACTIVITY] showWriteNFCDialog()");
-		Dialog writeNFCDialog = new Dialog(this);
-		writeNFCDialog.setCancelable(true);
-		writeNFCDialog.setCanceledOnTouchOutside(true);
-
-		writeNFCDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-		writeNFCDialog.setContentView(getLayoutInflater().inflate(
-				R.layout.activity_write_nfc, null));
-
-		writeNFCDialog.show();
-	}
-
+	// showHelpDialog()
 	private void showHelpDialog() {
 		Log.i(TAG, "[MAINACTIVITY] showHelpDialog()");
 		Dialog helpDialog = new Dialog(this);
@@ -1675,7 +1676,7 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 		Log.i(TAG, "[MAINACTIVITY] showSettingsDialog()");
 
 		if (settingsDialog == null) {
-			settingsDialog = new SettingsDialog(this, lpfWiki, lpfAndDev,
+			settingsDialog = new FilterSettingsDialog(this, lpfWiki, lpfAndDev,
 					meanFilter);
 			settingsDialog.setCancelable(true);
 			settingsDialog.setCanceledOnTouchOutside(true);

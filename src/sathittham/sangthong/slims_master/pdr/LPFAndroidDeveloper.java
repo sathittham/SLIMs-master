@@ -52,11 +52,15 @@ public class LPFAndroidDeveloper implements LowPassFilter
 
 	// Gravity and linear accelerations components for the
 	// Wikipedia low-pass filter
-	private float[] output = new float[]
+	private float[] gravity = new float[] 
 	{ 0, 0, 0 };
+	
+	private float[] linearAcceleration = new float[]
+	{0,0,0};
+	
 
 	// Raw accelerometer data
-	private float[] input = new float[]
+	private float[] input = new float[] 
 	{ 0, 0, 0 };
 
 	/**
@@ -87,12 +91,17 @@ public class LPFAndroidDeveloper implements LowPassFilter
 
 		if (count > 5)
 		{
-			output[0] = alpha * output[0] + (1 - alpha) * input[0];
-			output[1] = alpha * output[1] + (1 - alpha) * input[1];
-			output[2] = alpha * output[2] + (1 - alpha) * input[2];
+			gravity[0] = alpha * gravity[0] + (1 - alpha) * input[0];
+			gravity[1] = alpha * gravity[1] + (1 - alpha) * input[1];
+			gravity[2] = alpha * gravity[2] + (1 - alpha) * input[2];
+			
+			linearAcceleration[0] = input[0] - gravity[0];
+			linearAcceleration[1] = input[1] - gravity[1];
+			linearAcceleration[2] = input[2] - gravity[2];
+			
 		}
 
-		return output;
+		return linearAcceleration;
 	}
 
 	/**

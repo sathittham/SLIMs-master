@@ -35,17 +35,21 @@
                 android:id="@+id/slims_menu_settings_write_nfc"
                 android:icon="@drawable/ic_nfc_write_tag"
                 android:title="Write NFC Tag"/>
+            <item 
+                android:id="@+id/slims_menu_settings_user_info"
+                android:icon="@drawable/ic_action_emo_basic"
+                android:title="User Info"/>
             <item
-                android:id="@+id/slims_menu_graph"
-                android:icon="@drawable/action_about"
-                android:title="Graph"/>
+                android:id="@+id/slims_menu_Settings_filter_setting"
+                android:icon="@drawable/ic_action_line_chart"
+                android:title="Filters Setting"/>
             <item
                 android:id="@+id/slims_menu_settings_setting"
                 android:icon="@drawable/action_settings"
                 android:title="Setting"/>
             <item
                 android:id="@+id/slims_menu_settings_help"
-                android:icon="@drawable/action_help"
+                android:icon="@drawable/action_about"
                 android:title="Help"/>
         </menu>
     </item>

@@ -73,6 +73,7 @@
         </activity>
         <activity
             android:name="WriteNFCActivity"
+            
             android:parentActivityName="com.example.myfirstapp.MainActivity" >
 
             <!-- Parent activity meta-data to support 4.0 and lower -->
@@ -84,7 +85,10 @@
         </activity>
         <activity android:name="QRCodeResultActivity" >
         </activity>
-        <activity android:name="SearchActivity" >
+        <activity
+            android:name="SearchActivity"
+            android:label="Search"
+            android:theme="@android:style/Theme.Holo.Light.Dialog" >
         </activity>
 
         <!-- Library -->
@@ -100,6 +104,12 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
+        <activity
+            android:name="UserInfoActivity"
+            android:label="User Information"
+            android:theme="@android:style/Theme.Holo.Light.Dialog" >
+        </activity>
     </application>
 
 </manifest>
