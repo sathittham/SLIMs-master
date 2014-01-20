@@ -1639,7 +1639,9 @@ public class MainActivity extends Activity implements OnClickListener, Runnable 
 
 			/* Setting */
 		case R.id.slims_menu_settings_setting:
-			showSettingsDialog();
+			Intent intent5 = new Intent(MainActivity.this,
+					SettingActivity.class);
+			startActivity(intent5);
 			return true;
 
 			/* Help */

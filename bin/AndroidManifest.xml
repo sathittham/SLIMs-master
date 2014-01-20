@@ -73,7 +73,6 @@
         </activity>
         <activity
             android:name="WriteNFCActivity"
-            
             android:parentActivityName="com.example.myfirstapp.MainActivity" >
 
             <!-- Parent activity meta-data to support 4.0 and lower -->
@@ -108,6 +107,11 @@
         <activity
             android:name="UserInfoActivity"
             android:label="User Information"
+            android:theme="@android:style/Theme.Holo.Light.Dialog" >
+        </activity>
+        <activity
+            android:name="SettingActivity"
+            android:label="Settings"
             android:theme="@android:style/Theme.Holo.Light.Dialog" >
         </activity>
     </application>
